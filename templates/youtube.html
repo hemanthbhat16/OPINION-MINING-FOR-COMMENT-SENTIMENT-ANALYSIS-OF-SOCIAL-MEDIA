@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentimental Analysis</title>
+
+    <!-- Google Font Import for Titillium Web -->
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* General styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body background */
+        body {
+            background-color: #28282B; /* Matte black background */
+            color: #ffffff;
+            font-family: 'Titillium Web', sans-serif; /* Applying Titillium Web globally */
+            line-height: 1.6;
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is open */
+        }
+
+        /* Header styling */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #323234; /* Darker gray for header */
+            border-bottom: 2px solid rgba(255, 0, 0, 0.5); /* Red glass-like border */
+            box-shadow: 0 4px 8px rgba(255, 0, 0, 0.1);
+        }
+
+        /* Custom H1 font styling */
+        .header h1 {
+            font-size: 35px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #ffffff;
+        }
+
+        .menu-icon {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Sliding sidebar styling */
+        .sidebar {
+            position: fixed;
+            right: -250px; /* Start off-screen on the right */
+            top: 0;
+            height: 100%;
+            width: 250px;
+            background-color: rgba(46, 46, 46, 0.95);
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+            padding-top: 60px;
+            transition: 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            right: 0; /* Slide in from the right */
+        }
+
+        .sidebar a {
+            padding: 15px;
+            display: block;
+            color: #ffffff;
+            text-decoration: none;
+            margin-bottom: 10px;
+            margin-left: 10px;
+            margin-right: 10px;
+            font-size: 18px;
+            text-align: left;
+            border-radius: 4px;
+            background-color: #3a3a3a;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: #ff4d4d;
+        }
+
+        /* Overlay for clicking outside the sidebar */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 500;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Search box styling */
+        .search-container{
+            margin-top: 50px;
+            margin-left: 250px;
+            
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: #323234;
+            padding: 5px 10px;
+            border-radius: 25px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Background shadow */
+            width: 80%;
+            max-width: 800px;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.5); /* White shadow on hover */
+        }
+
+        .search-input {
+        flex: 1;
+        padding: 8px 15px; /* Reduce padding slightly */
+        font-size: 16px;
+        height: 36px; /* Set a fixed height */
+        border: none;
+        border-radius: 20px;
+        outline: none;
+        background-color: #323234;
+        color: #ffffff; /* White text for user input */
+        caret-color: #ffffff; /* White cursor color */
+        line-height: normal; /* Ensures the line-height doesn’t interfere */
+        
+        }
+
+
+        .search-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .search-icon {
+            margin-left: 5px;
+            margin-top: 5px;
+            width: 30px;
+            font-family: 'Titillium Web', sans-serif;
+            height: 30px;
+        }
+        .title{
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        /* Container to align the chart and word cloud side-by-side */
+        .results-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        #sentimentChart {
+            max-width: 400px;
+            max-height: 300px;
+        }
+
+        /* Style the Word Cloud container */
+        #wordCloudImage {
+            display: none; /* Hide initially */
+            max-width: 400px;
+            height: auto;
+            background-color: #fff;
+            border-radius: 8px;
+
+        }
+
+        .search-input::placeholder {
+        font-family: 'Titillium Web', sans-serif;
+        font-size: 20px;
+        color: #bfbfbf; /* Placeholder color */
+        transition: opacity 0.3s ease;
+        }
+
+        .search-input:focus::placeholder {
+        opacity: 0;
+        }
+
+        /* Apply Titillium Web font to Chart.js labels */
+        canvas {
+            font-family: 'Titillium Web', sans-serif !important;
+        }
+
+         /* Footer styling */
+         .footer {
+            margin-top: 100px;
+            background-color: #101010;
+            color: #ffffff;
+            padding: 20px;
+            border-top: 2px solid rgba(255, 0, 0, 0.5);
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .footer .quick-links, .footer .team-section {
+            flex: 1;
+            min-width: 150px;
+            margin-bottom: 10px;
+        }
+
+        .footer .quick-links p,
+        .footer .team-section h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #ff4d4d;
+        }
+
+        .footer .quick-links a {
+            display: block;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 5px 0;
+            transition: color 0.3s;
+        }
+
+        .footer .quick-links a:hover {
+            color: #ff4d4d;
+        }
+
+        .footer .team-section p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .mentor-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .mentor-section h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #ff4d4d;
+        }
+
+        .quick-links h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #ff4d4d;
+        }
+    
+        /* Overlay for spinner background effect */
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+            z-index: 1000;
+            display: none; /* Hide initially */
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #ff4d4d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none; /* Initially hidden */
+            z-index: 1001;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); /* Red glow effect */
+        }
+
+        .loading-spinner.active {
+            display: block; /* Show when active */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="header">
+        <h1>YouTube</h1>
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    </header>
+    <div class="title"><h1>Enter YouTube URL</h1></div>
+    
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <a href="/">Home</a>
+        <a href="/youtube">Youtube</a>
+        <a href="/reddit">Reddit</a>
+        <a href="/instagram">Instagram</a>
+    </div>
+
+    <!-- Overlay for clicking outside the sidebar -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Search Bar Section -->
+    <div class="search-container">
+        <div class="search-box">
+            <button class="search-button" onclick="sendData('youtube')" type="submit">
+                <img src="/static/search.png" alt="Search Icon" class="search-icon">
+            </button>
+            <input type="text" id="urlInput" placeholder="Type a URL" class="search-input">
+            <!-- Loading spinner next to the search box -->
+            <div id="spinnerOverlay" class="spinner-overlay"></div>
+            <div id="loadingSpinner" class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Chart and Word Cloud Side-by-Side Container -->
+    <div class="results-container">
+        <canvas id="sentimentChart"></canvas>
+        <img id="wordCloudImage" src="/static/wordcloud.png" alt="Word Cloud">
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="quick-links">
+                <h3>Quick Links</h3>
+                <a href="/">Home</a>
+                <a href="/youtube">YouTube</a>
+                <a href="/reddit">Reddit</a>
+                <a href="/instagram">Instagram</a>
+            </div>
+
+            <div class="team-section">
+                <h3>Team</h3>
+                <p>Mallesh Sajjan B N</p>
+                <p>Mohammed Hasan Raza</p>
+                <p>N Hemanth Bhat</p>
+                <p>Naveen B</p>
+                <h3>Mentor</h3>
+                <p>Mr. SRIKANTH BHAT K</p>
+            </div>
+        </div>
+
+    </footer>
+
+    <!-- Load Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <!-- JavaScript for Toggle Sidebar -->
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById("sidebar");
+            var overlay = document.getElementById("overlay");
+
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        }
+        function sendData(platform) {
+            const urlInput = document.getElementById("urlInput").value;
+            const loadingSpinner = document.getElementById("loadingSpinner");
+            const spinnerOverlay = document.getElementById("spinnerOverlay");
+
+            loadingSpinner.classList.add("active");
+            spinnerOverlay.style.display = "block"; // Show overlay
+            
+            fetch("/process", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ platform, url: urlInput })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => {
+                updateChart(data.positive, data.neutral, data.negative);
+                updateWordCloud();
+            })
+            .catch(error => console.error("Fetch operation error:", error))
+            .finally(() => {
+                loadingSpinner.classList.remove("active");
+                spinnerOverlay.style.display = "none"; // Hide overlay
+            });
+        }
+
+        function updateChart(positive, neutral, negative) {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        label: 'Sentiments',
+                        data: [positive, neutral, negative],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(255, 99, 132, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    family: 'Titillium Web', // Set font for y-axis labels
+                                    size: 14,
+                                },
+                                color: '#ffffff'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    family: 'Titillium Web', // Set font for x-axis labels
+                                    size: 14,
+                                },
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // This disables the legend
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to update and display the Word Cloud image
+        function updateWordCloud() {
+            const wordCloudImage = document.getElementById('wordCloudImage');
+            wordCloudImage.style.display = 'block';  // Show the image after analysis
+            const timestamp = new Date().getTime();  // Avoid cached image by appending timestamp
+            wordCloudImage.src = `/static/wordcloud.png?${timestamp}`;
+        }
+    </script>
+    
+</body>
+</html>

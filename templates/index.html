@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentimental Analysis</title>
+
+    <!-- Google Font Import for Titillium Web -->
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* General styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body background */
+        body {
+            background-color: #28282B; /* Matte black background */
+            color: #ffffff;
+            font-family: 'Titillium Web', sans-serif; /* Applying Titillium Web globally */
+            line-height: 1.6;
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is open */
+        }
+
+        /* Header styling */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #323234; /* Darker gray for header */
+            border-bottom: 2px solid rgba(255, 0, 0, 0.5); /* Red glass-like border */
+            box-shadow: 0 4px 8px rgba(255, 0, 0, 0.1);
+        }
+
+        /* Custom H1 font styling */
+        .header h1 {
+            font-size: 35px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #ffffff;
+        }
+
+        .menu-icon {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Sliding sidebar styling */
+        .sidebar {
+            position: fixed;
+            right: -250px; /* Start off-screen on the right */
+            top: 0;
+            height: 100%;
+            width: 250px;
+            background-color: rgba(46, 46, 46, 0.95);
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+            padding-top: 60px;
+            transition: 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            right: 0; /* Slide in from the right */
+        }
+
+        .sidebar a {
+            padding: 15px;
+            display: block;
+            color: #ffffff;
+            text-decoration: none;
+            margin-bottom: 10px;
+            margin-left: 10px;
+            margin-right: 10px;
+            font-size: 18px;
+            text-align: left; /* Align text to the right */
+            border-radius: 4px;
+            background-color: #3a3a3a;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: #ff4d4d;
+        }
+
+        /* Overlay for clicking outside the sidebar */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 500;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Overview section styling */
+        .overview {
+            padding: 40px 20px;
+            text-align: justify;
+            font-size: 18px;
+            color: #dcdcdc;
+        }
+
+        /* Images section styling */
+        .images-section {
+            display: flex;
+            justify-content: space-around;
+            margin: 40px 0;
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+        }
+
+        .images-section a {
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .images-section img {
+            width: 150px; /* Set a fixed width */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 38px; /* Rounded corners */
+            transition: border 0.3s, box-shadow 0.3s; /* Transition effects */
+        }
+
+        .images-section img:hover {
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.5); /* White shadow on hover */
+        }
+
+        .images-section a:active img {
+            transform: scale(0.95); /* Slightly shrink the image on click */
+        }
+
+        /* Footer styling */
+        .footer {
+            margin-top: 30px;
+            background-color: #101010;
+            color: #ffffff;
+            padding: 20px;
+            border-top: 2px solid rgba(255, 0, 0, 0.5);
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .footer .quick-links, .footer .team-section {
+            flex: 1;
+            min-width: 150px;
+            margin-bottom: 10px;
+        }
+
+        .footer .quick-links p,
+        .footer .team-section h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #ff4d4d;
+        }
+
+        .footer .quick-links a {
+            display: block;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 5px 0;
+            transition: color 0.3s;
+        }
+
+        .footer .quick-links a:hover {
+            color: #ff4d4d;
+        }
+
+        .footer .team-section p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .mentor-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .mentor-section h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #ff4d4d;
+        }
+
+        .quick-links h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #ff4d4d;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="header">
+        <h1>COMMENT SENTIMENTAL ANALYSIS</h1>
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <a href="/">Home</a>
+        <a href="/youtube">Youtube</a>
+        <a href="/reddit">Reddit</a>
+        <a href="/instagram">Instagram</a>
+    </div>
+
+    <!-- Overlay for clicking outside the sidebar -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Simple Overview Section -->
+    <section class="overview">
+        <h2>Overview</h2>
+        Our sentiment analysis web application allows you to explore the public mood on social media 
+        posts from YouTube, Instagram, and Reddit. Simply select a platform, enter the post URL, 
+        and our system will analyze the comments to classify them as Positive, Neutral, or Negative. 
+        Results are displayed in an easy to read bar chart, showing the sentiment breakdown, 
+        and a word cloud highlights the most frequently mentioned topics. This tool provides a quick, 
+        visual way to understand audience reactions and key discussion points on popular content.
+    </section>
+
+    <!-- Images Section -->
+    <section class="images-section">
+        <a href="/youtube">
+            <img src="/static/youtube_4096116.png" alt="YouTube">
+        </a>
+        <a href="/reddit">
+            <img src="/static/reddit_4008280.png" alt="Reddit">
+        </a>
+        <a href="/instagram">
+            <img src="/static/instagram_1409946.png" alt="Instagram">
+        </a>
+    </section><br>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="quick-links">
+                <h3>Quick Links</h3>
+                <a href="/">Home</a>
+                <a href="/youtube">YouTube</a>
+                <a href="/reddit">Reddit</a>
+                <a href="/instagram">Instagram</a>
+            </div>
+
+            <div class="team-section">
+                <h3>Team</h3>
+                <p>Mallesh Sajjan B N</p>
+                <p>Mohammed Hasan Raza</p>
+                <p>N Hemanth Bhat</p>
+                <p>Naveen B</p>
+                <h3>Mentor</h3>
+                <p>Mr. SRIKANTH BHAT K</p>
+            </div>
+        </div>
+
+    </footer>
+
+    <!-- JavaScript for Toggle Sidebar -->
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById("sidebar");
+            var overlay = document.getElementById("overlay");
+
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        }
+    </script>
+    
+</body>
+</html>
